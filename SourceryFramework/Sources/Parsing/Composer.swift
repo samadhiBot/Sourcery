@@ -325,7 +325,7 @@ public struct Composer {
 
                 actualTypeName = containedType?.name ?? possibleTypeName
             } else {
-                if let name = unique?["\(containingType.name).\(unwrappedTypeName)"]?.name {
+                if let name = unique?["\(containingType.globalName).\(unwrappedTypeName)"]?.globalName {
                     //check contained types first
                     actualTypeName = name
                 } else {
