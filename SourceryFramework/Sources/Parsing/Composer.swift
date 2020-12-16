@@ -337,6 +337,13 @@ public struct Composer {
                             break
                         }
                     }
+
+                    if actualTypeName == nil {
+                        //check with module name
+                        if let module = containingType.module, let name = unique?["\(module).\(unwrappedTypeName)"]?.globalName {
+                            actualTypeName = name
+                        }
+                    }
                     actualTypeName = actualTypeName ?? unwrappedTypeName
                 }
             }
