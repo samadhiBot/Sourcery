@@ -332,7 +332,7 @@ public struct Composer {
                     //otherwise go up contained types chain to find a type
                     let parentTypes = containingType.parentTypes
                     while let parent = parentTypes.next() {
-                        if let name = unique?["\(parent.name).\(unwrappedTypeName)"]?.name {
+                        if let name = unique?["\(parent.globalName).\(unwrappedTypeName)"]?.globalName {
                             actualTypeName = name
                             break
                         }
