@@ -340,8 +340,8 @@ public struct Composer {
 
                     if actualTypeName == nil {
                         //check with module name
-                        if let module = containingType.module, let name = unique?["\(module).\(unwrappedTypeName)"]?.globalName {
-                            actualTypeName = name
+                        if let module = containingType.module, let type = unique?["\(module).\(unwrappedTypeName)"] {
+                            actualTypeName = type.isExtension ? type.name : type.globalName
                         }
                     }
                     actualTypeName = actualTypeName ?? unwrappedTypeName
