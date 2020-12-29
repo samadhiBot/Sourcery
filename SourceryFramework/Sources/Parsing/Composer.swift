@@ -37,9 +37,9 @@ public struct Composer {
         parsedTypes
             .filter { $0.isExtension == false}
             .forEach {
-                unique[$0.globalName] = $0
+                unique[$0.name] = $0
                 if let module = $0.module {
-                    var typesByModules = modules[module, default: [:]]
+                    var typesByModules = modules[module] ?? [:]
                     typesByModules[$0.name] = $0
                     modules[module] = typesByModules
                 }
@@ -57,11 +57,11 @@ public struct Composer {
         parsedTypes.forEach { type in
             type.inheritedTypes = type.inheritedTypes.map { actualTypeName(for: TypeName($0), typealiases: resolvedTypealiases) ?? $0 }
 
-            let uniqueType = unique[type.globalName] ?? typeFromModule(type.name, modules: modules) ?? type.imports.lazy.compactMap { modules[$0]?[type.name] }.first
+            let uniqueType = unique[type.name] ?? typeFromModule(type.name, modules: modules)
 
             guard let current = uniqueType else {
                 //for unknown types we still store their extensions
-                unique[type.globalName] = type
+                unique[type.name] = type
 
                 let inheritanceClause = type.inheritedTypes.isEmpty ? "" :
                         ": \(type.inheritedTypes.joined(separator: ", "))"
@@ -73,7 +73,7 @@ public struct Composer {
             if current == type { return }
 
             current.extend(type)
-            unique[current.globalName] = current
+            unique[current.name] = current
         }
 
         let resolutionStart = currentTimestamp()
@@ -403,39 +403,23 @@ public struct Composer {
 
     private static func updateTypeRelationships(types: [Type]) {
         var typesByName = [String: Type]()
-        types.forEach { typesByName[$0.globalName] = $0 }
+        types.forEach { typesByName[$0.name] = $0 }
 
         var processed = [String: Bool]()
         types.forEach { type in
             if let type = type as? Class, let supertype = type.inheritedTypes.first.flatMap({ typesByName[$0] }) as? Class {
                 type.supertype = supertype
             }
-            processed[type.globalName] = true
+            processed[type.name] = true
             updateTypeRelationship(for: type, typesByName: typesByName, processed: &processed)
         }
     }
 
-    private static func findBaseType(for type: Type, name: String, typesByName: [String: Type]) -> Type? {
-        if let baseType = typesByName[name] {
-            return baseType
-        }
-        if let module = type.module, let baseType = typesByName["\(module).\(name)"] {
-            return baseType
-        }
-        for importModule in type.imports {
-            if let baseType = typesByName["\(importModule).\(name)"] {
-                return baseType
-            }
-        }
-        return nil
-    }
-
     private static func updateTypeRelationship(for type: Type, typesByName: [String: Type], processed: inout [String: Bool]) {
         type.based.keys.forEach { name in
-            guard let baseType = findBaseType(for: type, name: name, typesByName: typesByName) else { return }
-            let globalName = baseType.globalName
-            if processed[globalName] != true {
-                processed[globalName] = true
+            guard let baseType = typesByName[name] else { return }
+            if processed[name] != true {
+                processed[name] = true
                 updateTypeRelationship(for: baseType, typesByName: typesByName, processed: &processed)
             }
 
@@ -444,11 +428,11 @@ public struct Composer {
             baseType.implements.forEach { type.implements[$0.key] = $0.value }
 
             if baseType is Class {
-                type.inherits[globalName] = baseType
+                type.inherits[name] = baseType
             } else if baseType is SourceryProtocol {
-                type.implements[globalName] = baseType
+                type.implements[name] = baseType
             } else if baseType is ProtocolComposition {
-                type.implements[globalName] = baseType
+                type.implements[name] = baseType
             }
         }
     }
