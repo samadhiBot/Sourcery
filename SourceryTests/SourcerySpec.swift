@@ -3,7 +3,7 @@ import Nimble
 import PathKit
 @testable import Sourcery
 @testable import SourceryRuntime
-import xcproj
+import XcodeProj
 
 private let version = "Major.Minor.Patch"
 
@@ -978,7 +978,7 @@ class SourcerySpecTests: QuickSpec {
 
                 afterEach {
                     expect {
-                        try originalProject?.writePBXProj(path: projectFilePath)
+                        try originalProject?.writePBXProj(path: projectFilePath, outputSettings: PBXOutputSettings())
                         }.toNot(throwError())
                 }
 
